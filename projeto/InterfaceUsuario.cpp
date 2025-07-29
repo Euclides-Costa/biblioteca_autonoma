@@ -47,6 +47,9 @@ void InterfaceUsuario::exibirCabecalho(const string& titulo) {
 }
 
 void InterfaceUsuario::telaBoasVindas(Biblioteca* bib, UsuarioObservador& observador) {
+    // Adiciona o observador uma única vez no início do sistema
+    bib->getNotificador()->adicionar(&observador);
+
     int escolha;
     do {
         exibirCabecalho("MENU PRINCIPAL");
@@ -84,7 +87,6 @@ void InterfaceUsuario::telaBoasVindas(Biblioteca* bib, UsuarioObservador& observ
                 Usuario* usuario = bib->autenticarUsuario(email, senha);
                 
                 if (usuario) {
-                    bib->getNotificador()->adicionar(&observador);
                     telaMenuPrincipal(bib, usuario);
                 } else {
                     cout << "\nLogin falhou! Email ou senha incorretos.\n";
@@ -111,11 +113,10 @@ void InterfaceUsuario::telaMenuPrincipal(Biblioteca* bib, Usuario* usuario) {
         
         cout << "1. Emprestar livro\n";
         cout << "2. Ler livro\n";
-        cout << "3. Ver créditos\n";
-        cout << "4. Devolver livro\n";
-        cout << "5. Ranking de livros\n";
-        cout << "6. Histórico de livros cedidos\n";
-        cout << "7. Histórico de livros lidos\n";
+        cout << "3. Devolver livro\n";
+        cout << "4. Ranking de livros\n";
+        cout << "5. Histórico de livros cedidos\n";
+        cout << "6. Histórico de livros lidos\n";
         cout << "0. Sair\n";
         cout << "\nEscolha: ";
         cin >> opcao;
@@ -129,20 +130,15 @@ void InterfaceUsuario::telaMenuPrincipal(Biblioteca* bib, Usuario* usuario) {
                 telaLerLivro(bib, usuario);
                 break;
             case 3:
-                exibirCabecalho("CRÉDITOS");
-                cout << "Créditos disponíveis: " << usuario->getCreditos() << "\n";
-                pausar();
-                break;
-            case 4:
                 telaDevolverLivro(bib, usuario);
                 break;
-            case 5:
+            case 4:
                 telaRankingLivros(bib);
                 break;
-            case 6:
+            case 5:
                 telaHistoricoCedidos(usuario);
                 break;
-            case 7:
+            case 6:
                 telaHistoricoLidos(usuario);
                 break;
             case 0:
@@ -206,27 +202,22 @@ void InterfaceUsuario::telaLerLivro(Biblioteca* bib, Usuario* usuario) {
     bool encontrado = false;
     for (const auto& livro : livros) {
         if (livro.getId() == idLivro) {
-            // Remove o livro do acervo
             bib->removerLivro(idLivro);
             
-            // Registra o empréstimo
             time_t now = time(0);
             usuario->emprestarLivro(livro, nullptr);
             
-            // Debita crédito do leitor
             CreditoPorLeitura estrategiaLeitura;
             usuario->lerLivro(livro, &estrategiaLeitura);
             
-            // Credita o dono do livro (se for diferente)
             Usuario* dono = bib->encontrarUsuarioPorEmail(livro.getDonoEmail());
             if (dono && dono->getEmail() != usuario->getEmail()) {
                 dono->setCreditos(dono->getCreditos() + 1);
                 cout << "\nO dono do livro (" << dono->getNome() << ") foi creditado com 1 ponto!\n";
             }
             
-            // Mostra data de devolução prevista
             tm* tm_info = localtime(&now);
-            tm_info->tm_mday += 7; // Prazo de 7 dias
+            tm_info->tm_mday += 7;
             mktime(tm_info);
             
             cout << "\nLivro emprestado com sucesso! 1 crédito debitado.\n";
@@ -269,7 +260,7 @@ void InterfaceUsuario::telaDevolverLivro(Biblioteca* bib, Usuario* usuario) {
         if (idLivro == "voltar") break;
         
         bool livroEncontrado = false;
-        Livro livroDevolvido("", 0); // Criando objeto temporário
+        Livro livroDevolvido("", 0);
         
         for (const auto& pair : usuario->getLivrosEmprestadosComData()) {
             if (pair.first.getId() == idLivro) {
@@ -288,7 +279,6 @@ void InterfaceUsuario::telaDevolverLivro(Biblioteca* bib, Usuario* usuario) {
         int diasAtraso = usuario->verificarAtraso(idLivro);
         
         if (usuario->removerLivroEmprestado(idLivro)) {
-            // Adiciona o livro de volta ao acervo
             bib->adicionarLivro(livroDevolvido);
             cout << "\nLivro devolvido com sucesso!\n";
             
