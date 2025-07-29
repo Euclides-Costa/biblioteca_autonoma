@@ -12,20 +12,24 @@ bool Usuario::autenticar(std::string e, std::string s) {
 
 void Usuario::doarLivro(const Livro& livro, ICreditoStrategy* estrategia) {
     livrosCedido.push_back(livro);
-    creditos += estrategia->calcularCredito(this);
-}
-
-void Usuario::lerLivro(const Livro& livro, ICreditoStrategy* estrategia) {
     if (estrategia) {
         creditos += estrategia->calcularCredito(this);
     }
+}
+
+void Usuario::lerLivro(const Livro& livro, ICreditoStrategy* estrategia) {
     livrosLidos.push_back(livro);
+    if (estrategia) {
+        creditos += estrategia->calcularCredito(this);
+    }
 }
 
 void Usuario::emprestarLivro(Livro livro, ICreditoStrategy* estrategia) {
     time_t now = time(0);
     livrosEmprestadosComData.push_back(std::make_pair(livro, now));
-    creditos += estrategia->calcularCredito(this);
+    if (estrategia) {
+        creditos += estrategia->calcularCredito(this);
+    }
 }
 
 bool Usuario::removerLivroEmprestado(const std::string& idLivro) {
@@ -42,13 +46,27 @@ bool Usuario::removerLivroEmprestado(const std::string& idLivro) {
     return false;
 }
 
+void Usuario::devolverLivro(const std::string& idLivro) {
+    auto it = std::remove_if(livrosEmprestadosComData.begin(), 
+                           livrosEmprestadosComData.end(),
+                           [&idLivro](const auto& pair) {
+                               return pair.first.getId() == idLivro;
+                           });
+    
+    if (it != livrosEmprestadosComData.end()) {
+        livrosEmprestadosComData.erase(it, livrosEmprestadosComData.end());
+    }
+}
+
 int Usuario::verificarAtraso(const std::string& idLivro) const {
+    const int PRAZO_DEVOLUCAO = 7; // 7 dias de prazo
     time_t now = time(0);
+    
     for (const auto& pair : livrosEmprestadosComData) {
         if (pair.first.getId() == idLivro) {
             double diferenca = difftime(now, pair.second) / (60 * 60 * 24);
-            if (diferenca > 7) {
-                return static_cast<int>(diferenca) - 7;
+            if (diferenca > PRAZO_DEVOLUCAO) {
+                return static_cast<int>(diferenca) - PRAZO_DEVOLUCAO;
             }
             break;
         }
@@ -56,9 +74,21 @@ int Usuario::verificarAtraso(const std::string& idLivro) const {
     return 0;
 }
 
-int Usuario::getCreditos() const { return creditos; }
-std::string Usuario::getNome() const { return nome; }
-std::string Usuario::getEmail() const { return email; }
+int Usuario::getCreditos() const { 
+    return creditos; 
+}
+
+void Usuario::setCreditos(int novosCreditos) {
+    creditos = novosCreditos;
+}
+
+std::string Usuario::getNome() const { 
+    return nome; 
+}
+
+std::string Usuario::getEmail() const { 
+    return email; 
+}
 
 const std::vector<Livro>& Usuario::getLivrosCedido() const { 
     return livrosCedido; 

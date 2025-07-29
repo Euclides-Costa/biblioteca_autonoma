@@ -18,9 +18,11 @@ public:
     void adicionarUsuario(Usuario* usuario);
     Usuario* autenticarUsuario(std::string email, std::string senha);
     void adicionarLivro(const Livro& livro);
+    void removerLivro(const std::string& idLivro);  // Novo método
     std::vector<Livro> getAcervo();
     void mostrarRankingLivros();
     Notificador* getNotificador();
     std::vector<Usuario*> getUsuarios();
     Usuario* encontrarUsuarioPorEmail(std::string email);
+    bool emailJaCadastrado(std::string email);
 };

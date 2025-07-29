@@ -1,30 +1,54 @@
 #include "Biblioteca.hpp"
 #include <iostream>
 #include <algorithm>
+#include <map>
+#include <ctime>
 
 Biblioteca* Biblioteca::instancia = nullptr;
 
 Biblioteca::Biblioteca() {}
 
 Biblioteca* Biblioteca::getInstancia() {
-    if (!instancia)
+    if (!instancia) {
         instancia = new Biblioteca();
+    }
     return instancia;
 }
 
+bool Biblioteca::emailJaCadastrado(std::string email) {
+    for (auto u : usuarios) {
+        if (u->getEmail() == email) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Biblioteca::adicionarUsuario(Usuario* usuario) {
+    if (emailJaCadastrado(usuario->getEmail())) {
+        throw std::runtime_error("E-mail já cadastrado!");
+    }
     usuarios.push_back(usuario);
 }
 
 Usuario* Biblioteca::autenticarUsuario(std::string email, std::string senha) {
     for (auto u : usuarios) {
-        if (u->autenticar(email, senha)) return u;
+        if (u->autenticar(email, senha)) {
+            return u;
+        }
     }
     return nullptr;
 }
 
 void Biblioteca::adicionarLivro(const Livro& livro) {
     acervo.push_back(livro);
+}
+
+void Biblioteca::removerLivro(const std::string& idLivro) {
+    acervo.erase(std::remove_if(acervo.begin(), acervo.end(),
+        [&idLivro](const Livro& livro) {
+            return livro.getId() == idLivro;
+        }), acervo.end());
 }
 
 std::vector<Livro> Biblioteca::getAcervo() {
@@ -67,7 +91,9 @@ std::vector<Usuario*> Biblioteca::getUsuarios() {
 
 Usuario* Biblioteca::encontrarUsuarioPorEmail(std::string email) {
     for (auto u : usuarios) {
-        if (u->getEmail() == email) return u;
+        if (u->getEmail() == email) {
+            return u;
+        }
     }
     return nullptr;
 }

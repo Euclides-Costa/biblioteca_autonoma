@@ -22,8 +22,10 @@ public:
     void lerLivro(const Livro& livro, ICreditoStrategy* estrategia);
     void emprestarLivro(Livro livro, ICreditoStrategy* estrategia);
     bool removerLivroEmprestado(const std::string& idLivro);
-    int verificarAtraso(const std::string& idLivro) const;
+    int verificarAtraso(const std::string& idLivro) const; // Mantenha apenas uma declaração
+    void devolverLivro(const std::string& idLivro);
     int getCreditos() const;
+    void setCreditos(int novosCreditos);
     std::string getNome() const;
     std::string getEmail() const;
     const std::vector<Livro>& getLivrosCedido() const;
