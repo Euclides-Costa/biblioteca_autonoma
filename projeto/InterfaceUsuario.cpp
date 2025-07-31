@@ -9,6 +9,7 @@
 
 using namespace std;
 
+// Limpa a tela do console
 void InterfaceUsuario::limparTela() {
     #ifdef _WIN32
         system("cls");
@@ -17,12 +18,14 @@ void InterfaceUsuario::limparTela() {
     #endif
 }
 
+// Pausa a execução e espera Enter
 void InterfaceUsuario::pausar() {
     cout << "\nPressione Enter para continuar...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cin.get();
 }
 
+// Lê um número inteiro com validação
 int InterfaceUsuario::lerInteiro(const string& mensagem) {
     int valor;
     while (true) {
@@ -39,6 +42,7 @@ int InterfaceUsuario::lerInteiro(const string& mensagem) {
     }
 }
 
+// Exibe um cabeçalho formatado
 void InterfaceUsuario::exibirCabecalho(const string& titulo) {
     limparTela();
     cout << "===================================================\n";
@@ -46,10 +50,8 @@ void InterfaceUsuario::exibirCabecalho(const string& titulo) {
     cout << "===================================================\n\n";
 }
 
+// Tela inicial do sistema
 void InterfaceUsuario::telaBoasVindas(Biblioteca* bib, UsuarioObservador& observador) {
-    // Adiciona o observador uma única vez no início do sistema
-    bib->getNotificador()->adicionar(&observador);
-
     int escolha;
     do {
         exibirCabecalho("MENU PRINCIPAL");
@@ -104,6 +106,7 @@ void InterfaceUsuario::telaBoasVindas(Biblioteca* bib, UsuarioObservador& observ
     } while (escolha != 0);
 }
 
+// Menu principal do usuário autenticado
 void InterfaceUsuario::telaMenuPrincipal(Biblioteca* bib, Usuario* usuario) {
     int opcao;
     do {
@@ -151,6 +154,7 @@ void InterfaceUsuario::telaMenuPrincipal(Biblioteca* bib, Usuario* usuario) {
     } while (opcao != 0);
 }
 
+// Tela para emprestar livro
 void InterfaceUsuario::telaEmprestarLivro(Biblioteca* bib, Usuario* usuario) {
     exibirCabecalho("EMPRESTAR LIVRO");
     
@@ -170,6 +174,7 @@ void InterfaceUsuario::telaEmprestarLivro(Biblioteca* bib, Usuario* usuario) {
     pausar();
 }
 
+// Tela para ler livro
 void InterfaceUsuario::telaLerLivro(Biblioteca* bib, Usuario* usuario) {
     exibirCabecalho("LER LIVRO");
     
@@ -234,6 +239,7 @@ void InterfaceUsuario::telaLerLivro(Biblioteca* bib, Usuario* usuario) {
     pausar();
 }
 
+// Tela para devolver livro
 void InterfaceUsuario::telaDevolverLivro(Biblioteca* bib, Usuario* usuario) {
     exibirCabecalho("DEVOLVER LIVRO");
     
@@ -298,26 +304,38 @@ void InterfaceUsuario::telaDevolverLivro(Biblioteca* bib, Usuario* usuario) {
     }
 }
 
+// Tela para mostrar ranking de livros
 void InterfaceUsuario::telaRankingLivros(Biblioteca* bib) {
     exibirCabecalho("RANKING DE LIVROS");
     bib->mostrarRankingLivros();
     pausar();
 }
 
+// Tela para mostrar histórico de livros cedidos
 void InterfaceUsuario::telaHistoricoCedidos(Usuario* usuario) {
     exibirCabecalho("HISTÓRICO DE LIVROS CEDIDOS");
     usuario->mostrarHistoricoCedidos();
     pausar();
 }
 
+// Tela para mostrar histórico de livros lidos
 void InterfaceUsuario::telaHistoricoLidos(Usuario* usuario) {
     exibirCabecalho("HISTÓRICO DE LIVROS LIDOS");
     usuario->mostrarHistoricoLidos();
     pausar();
 }
 
+// Método principal que inicia o sistema
 void InterfaceUsuario::executarSistema() {
     Biblioteca* bib = Biblioteca::getInstancia();
     UsuarioObservador observador;
-    telaBoasVindas(bib, observador);
+    
+    try {
+        telaBoasVindas(bib, observador);
+    } catch (...) {
+        bib->salvarDados();
+        throw;
+    }
+    
+    bib->salvarDados();
 }
